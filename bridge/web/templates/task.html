@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% from "macros.html" import state, prio, untrusted, step_up_form %}
+{% block title %}{{ t.title | truncate(60) }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/app/tasks">Tasks</a> / <span class="mono">{{ t.id }}</span></p>
+<h1 class="task-title"><span class="aw-inline" title="title written by {{ t.originator_agent_id }}">agent-written</span> {{ t.title }}</h1>
+<div class="meta">
+  {{ state(t.state) }} {{ prio(t.priority) }}
+  {% if t.paused %}<span class="badge warn">paused by a human</span>{% endif %}
+  <span>originator <a href="/app/agents/{{ t.originator_agent_id }}">{{ t.originator_agent_id }}</a></span>
+  <span>responsible <a href="/app/agents/{{ t.responsible_agent_id }}"><b>{{ t.responsible_agent_id }}</b></a></span>
+  <span>category {{ t.category }}</span>
+  {% if t.project %}<span>project {{ t.project }}{% if t.component %} / {{ t.component }}{% endif %}</span>{% endif %}
+  {% if t.resume_state %}<span>escalated from {{ state(t.resume_state) }}</span>{% endif %}
+  <span>v{{ t.version }}</span>
+  <span>created <time>{{ t.created_at | ts }}</time></span>
+  {% if t.closed_at %}<span>closed <time>{{ t.closed_at | ts }}</time></span>{% endif %}
+</div>
+
+<div class="cols">
+<section class="thread">
+<h2>Description</h2>
+{{ untrusted(t.description) }}
+{% if t.acceptance_criteria %}
+<h3>Acceptance criteria <span class="aw-inline">agent-written</span></h3>
+<ul class="criteria">{% for c in t.acceptance_criteria %}<li>{{ c }}</li>{% endfor %}</ul>
+{% endif %}
+{% if t.related_task_ids or t.parent_task_id %}
+<p class="small">
+{% if t.parent_task_id %}Follow-up of <a href="/app/tasks/{{ t.parent_task_id }}" class="mono">{{ t.parent_task_id }}</a> (hop {{ t.hop_count }}). {% endif %}
+{% if t.related_task_ids %}Related: {% for r in t.related_task_ids %}{% if r is bridge_id('tsk_') %}<a href="/app/tasks/{{ r }}" class="mono">{{ r }}</a>{% else %}<span class="mono">{{ r }}</span>{% endif %} {% endfor %}{% endif %}
+</p>
+{% endif %}
+
+<h2>Conversation &amp; history <small class="muted">({{ t.message_count }} messages)</small></h2>
+{% if older or paged %}<p class="small">{% if older %}<a href="/app/tasks/{{ t.id }}?before={{ older }}">← older events</a>{% endif %}
+{% if paged %} <a href="/app/tasks/{{ t.id }}">newest events →</a>{% endif %}</p>{% endif %}
+<ol class="timeline">
+{% for e in timeline %}
+{% if e.message %}{% set m = e.message %}
+<li class="msg {{ m.sender.kind }} depth-{{ [m.depth, 6] | min }}" id="{{ m.id }}">
+  <header>
+    <span class="type t-{{ m.type }}">{{ m.type }}</span>
+    <b>{% if m.sender.kind == 'human' %}{{ names.get(m.sender.id, m.sender.id) }} (human{% if m.sender.party_id %}, party {{ m.sender.party_id }}{% endif %}){% else %}{{ m.sender.id }}{% endif %}</b>
+    {% if m.sender.kind == 'agent' %}<span class="aw-inline">agent-written</span>{% endif %}
+    <time>{{ m.created_at | ts }}</time>
+    {% if m.in_reply_to %}<a class="small" href="#{{ m.in_reply_to }}">↪ in reply to {{ m.in_reply_to[-6:] }}</a>{% endif %}
+    <a class="small muted" href="#{{ m.id }}">#{{ m.seq }}</a>
+  </header>
+  {% if m.body.text %}<pre class="body">{{ m.body.text }}</pre>{% endif %}
+  {% set data = m.body.data or {} %}
+  {% if data.outcome %}{% if m.type == 'VALIDATION_RESULT' and m.sender.kind == 'agent' and m.sender.id == t.responsible_agent_id %}
+  <p class="small"><span class="badge warn">self-check by the responsible agent</span> reported: <b>{{ data.outcome }}</b> — not a validation; no state change</p>
+  {% elif m.type == 'VALIDATION_RESULT' %}<p class="small">Validation outcome: <b>{{ data.outcome }}</b></p>
+  {% else %}<p class="small">Outcome: <b>{{ data.outcome }}</b></p>{% endif %}{% endif %}
+  {% if data.artifact_ids %}<p class="small">Artifacts:
+    {% for aid in data.artifact_ids %}{% if aid in art_ids %}<a href="/app/artifacts/{{ aid }}" download>{{ aid }}</a>{% else %}<span class="mono">{{ aid }}</span>{% endif %} {% endfor %}</p>{% endif %}
+  {% if m.body.refs %}<ul class="refs">
+    {% for r in m.body.refs %}<li><span class="badge">{{ r.kind }}</span>
+      {% if r.kind == 'url' %}<code class="extlink">{{ r.value | reveal }}</code> <small class="muted">(external, untrusted - copy to open)</small>
+      {% elif r.kind == 'task' and r.value is bridge_id('tsk_') %}<a href="/app/tasks/{{ r.value }}">{{ r.value }}</a>
+      {% else %}<code>{{ r.value }}</code>{% endif %}
+      {% if r.label %} — {{ r.label }}{% endif %}</li>{% endfor %}
+  </ul>{% endif %}
+  {% if data %}<details><summary>data (JSON)</summary><pre>{{ data | pretty }}</pre></details>{% endif %}
+</li>
+{% elif e.kind != 'message' %}
+<li class="event">
+  <time>{{ e.ts | ts }}</time> <b>{{ e.actor.id }}</b> <small class="muted">({{ e.actor.kind }})</small>
+  {% if e.kind == 'state_changed' or e.kind == 'created' %}{% if e.from_state %}{{ state(e.from_state) }} → {% endif %}{{ state(e.to_state) }}
+  {% else %}{{ e.kind | replace('_', ' ') }}{% endif %}
+  {% if e.detail %}<small class="muted">{{ e.detail | compact }}</small>{% endif %}
+</li>
+{% endif %}
+{% endfor %}
+</ol>
+{% if older %}<p class="small"><a href="/app/tasks/{{ t.id }}?before={{ older }}">← older events</a></p>{% endif %}
+</section>
+
+<aside class="side">
+<h2>Artifacts</h2>
+{% if artifacts %}<ul class="files">
+{% for a in artifacts %}<li><a href="/app/artifacts/{{ a.id }}" download>{{ a.filename }}</a> <small class="muted">{{ a.content_type }}, {{ a.size }} B, by {{ a.uploader_id }}, <time>{{ a.created_at | ts }}</time></small><br><small class="mono muted">sha256 {{ a.sha256[:16] }}…</small></li>{% endfor %}
+</ul><p class="muted small">Downloads only; never opened in the browser. Treat contents as untrusted.</p>
+{% else %}<p class="muted">None.</p>{% endif %}
+
+<h2>Approvals</h2>
+{% if approvals %}<ul class="files">
+{% for a in approvals %}<li><a href="/app/approvals/{{ a.id }}">{{ a.kind }}</a> {{ state(a.state) }} <small class="muted">by {{ a.requested_by }}, <time>{{ a.created_at | ts }}</time></small></li>{% endfor %}
+</ul>{% else %}<p class="muted">None.</p>{% endif %}
+
+{% if not terminal %}
+<h2>Actions</h2>
+{% if not step_up_ok %}{{ step_up_form('/app/tasks/' ~ t.id, csrf) }}
+<p class="small muted">Instruction, approve, reject, state change and counter reset need the step-up above; priority, pause, resume and escalate do not.</p>{% endif %}
+<form method="post" action="/app/tasks/{{ t.id }}/instruction" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Add context / instruction (sent to both agents) <textarea name="text" rows="4" maxlength="16000" required></textarea></label>
+  <button type="submit">Send instruction</button>
+</form>
+<form method="post" action="/app/tasks/{{ t.id }}/priority" class="row card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Priority <select name="priority">{% for p in priorities %}<option value="{{ p }}"{% if p == t.priority %} selected{% endif %}>{{ p }}</option>{% endfor %}</select></label>
+  <button type="submit">Change</button>
+</form>
+{% if can_approve %}
+<form method="post" action="/app/tasks/{{ t.id }}/approve" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Approve ({% if t.state == 'needs_human' %}resume to {{ approve_to }}{% elif t.state == 'proposed' %}accept on behalf of the responsible side{% else %}mark verified{% endif %}) — note <input name="reason" maxlength="1000"></label>
+  <button type="submit" class="good">Approve</button>
+</form>
+{% endif %}
+<form method="post" action="/app/tasks/{{ t.id }}/reject" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Reject (final) — reason <input name="reason" required maxlength="1000"></label>
+  <button type="submit" class="danger">Reject task</button>
+</form>
+<form method="post" action="/app/tasks/{{ t.id }}/{{ 'resume' if t.paused else 'pause' }}" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  {% if t.paused %}<button type="submit">Resume (allow agent writes)</button>
+  {% else %}<label>Pause (blocks agent writes) — reason <input name="reason" maxlength="500"></label><button type="submit" class="warn">Pause task</button>{% endif %}
+</form>
+{% if t.state != 'needs_human' %}
+<form method="post" action="/app/tasks/{{ t.id }}/escalate" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Escalate to needs_human — reason <input name="reason" required maxlength="1000"></label>
+  <button type="submit" class="warn">Escalate</button>
+</form>
+{% endif %}
+<form method="post" action="/app/tasks/{{ t.id }}/reset_counters" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <p class="small">Message caps count per agent since the last reset (agent streak too).</p>
+  <button type="submit">Reset message counters</button>
+</form>
+<p class="small muted">State changes that belong to the other party's agent (e.g. {{ agent_party.get(t.responsible_agent_id) }} accepting or finishing work) need a step-up; only the originator's party marks a task verified.</p>
+<form method="post" action="/app/tasks/{{ t.id }}/transition" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <input type="hidden" name="expected_version" value="{{ t.version }}">
+  <label>Set state <select name="to">{% for s in targets %}<option value="{{ s }}">{{ s }}</option>{% endfor %}</select></label>
+  <label>Reason (required for rejected, blocked, needs_human) <input name="reason" maxlength="1000"></label>
+  <button type="submit">Transition</button>
+</form>
+{% else %}
+<p class="muted">This task is {{ t.state }} (final). Create a follow-up task to continue.</p>
+{% endif %}
+</aside>
+</div>
+{% endblock %}

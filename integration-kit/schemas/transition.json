@@ -1,0 +1,52 @@
+{
+  "$id": "https://agent-bridge.invalid/schemas/TransitionIn",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "expected_version": {
+      "anyOf": [
+        {
+          "minimum": 1.0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Expected Version"
+    },
+    "reason": {
+      "anyOf": [
+        {
+          "maxLength": 2000,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Reason"
+    },
+    "to": {
+      "enum": [
+        "proposed",
+        "accepted",
+        "in_progress",
+        "ready_for_validation",
+        "verified",
+        "closed",
+        "blocked",
+        "rejected",
+        "needs_human"
+      ],
+      "title": "To",
+      "type": "string"
+    }
+  },
+  "required": [
+    "to"
+  ],
+  "title": "POST /v1/tasks/{id}/transition request body",
+  "type": "object",
+  "x-generated-from": "docs/openapi.json#/components/schemas/TransitionIn"
+}

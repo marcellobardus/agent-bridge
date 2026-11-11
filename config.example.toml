@@ -1,0 +1,31 @@
+# Agent Bridge config (non-secret). Secrets (pepper, totp_kek) come from systemd credentials
+# ($CREDENTIALS_DIRECTORY), never from this file. Flat keys or [server]/[storage] sections are both accepted.
+[server]
+host = "127.0.0.1"                      # loopback only; the service refuses anything else
+port = 8787
+public_origin = "https://CHANGE-ME.ngrok-free.app"   # enrollment/approval links + Origin check
+poll_after_s = 900                      # agent poll hint (15 min) — keeps a free tunnel plan within its request quota
+# header_timeout_s = 10                 # close sockets without complete request headers
+# body_timeout_s = 30                   # ... or without a complete artifact upload body
+# small_body_timeout_s = 10             # headers + body deadline for every other request
+# enroll_ttl_s = 86400                  # lifetime of NEW enrollment links (existing links keep theirs)
+# expose_openapi = false                # serve /v1/openapi.json (agents use docs/openapi.json instead)
+# limit_concurrency = 200
+
+[storage]
+db_path = "/var/lib/agent-bridge/bridge.db"
+backup_dir = "/var/backups/agent-bridge"   # used by deploy/backup.sh only
+
+# [limits]                              # optional overrides, see bridge/config.py Limits
+# artifact_max_bytes = 2097152
+# max_clarification_rounds = 3
+# unauth_per_ip_per_min = 30            # failed authentications per client IP; valid keys are never charged
+# max_in_flight_per_key = 2
+# max_response_bytes = 1048576
+# max_buffered_bytes = 16777216         # all request bodies held in memory at once (503 server_busy beyond)
+# max_large_bodies = 4                  # concurrent artifact-size uploads
+# pre_session_body_bytes = 8192         # login, enroll, anything without a key or session
+# session_body_bytes = 204800           # dashboard forms with a valid session
+# login_in_flight_global = 4            # concurrent password checks (429 beyond, no hashing)
+# login_attempts_per_ip_per_min = 10
+# enroll_miss_per_ip_per_min = 10

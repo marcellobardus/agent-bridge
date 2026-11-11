@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% from "macros.html" import task_table, approval_table, state %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+{% for kind, text in banners %}<p class="banner {{ kind }}">{{ text }}</p>{% endfor %}
+<div class="tiles">
+  <a class="tile{% if my_pending %} hot{% endif %}" href="/app/approvals?party={{ me.party_id }}"><b>{{ my_pending }}</b><span>approvals waiting for you</span></a>
+  <a class="tile" href="/app/approvals"><b>{{ pending | length }}</b><span>pending approvals (both parties)</span></a>
+  <a class="tile{% if needs_human %} hot{% endif %}" href="/app/tasks?state=needs_human"><b>{{ needs_human | length }}</b><span>tasks need a human</span></a>
+  <a class="tile" href="/app/tasks"><b>{{ active | length }}</b><span>active tasks</span></a>
+</div>
+
+{% if needs_human %}
+<h2>Needs a human</h2>
+{{ task_table(needs_human) }}
+{% endif %}
+
+{% if pending %}
+<h2>Pending approvals</h2>
+{{ approval_table(pending, {}) }}
+{% endif %}
+
+<h2>Active tasks <small class="muted">(by priority)</small></h2>
+{{ task_table(active, 'No active tasks.') }}
+
+<h2>Agents</h2>
+<div class="scroll"><table class="list">
+<thead><tr><th>Agent</th><th>Party</th><th>Status</th><th>Last poll</th></tr></thead>
+<tbody>
+{% for a in agents %}
+<tr><td data-l="Agent"><a href="/app/agents/{{ a.id }}">{{ a.id }}</a></td><td data-l="Party">{{ a.party_id }}</td>
+<td data-l="Status">{% if a.disabled %}<span class="badge bad">disabled</span>{% elif a.paused %}<span class="badge warn">paused</span>{% else %}<span class="badge ok">active</span>{% endif %}</td>
+<td data-l="Last poll"><time>{{ a.last_poll_at | ts }}</time></td></tr>
+{% endfor %}
+</tbody></table></div>
+
+<p class="muted small">States: {% for s, n in counts | dictsort %}{{ state(s) }} {{ n }} {% endfor %}</p>
+{% endblock %}

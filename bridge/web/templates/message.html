@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% from "macros.html" import state %}
+{% block title %}Message {{ m.id }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/app/messages">Messages</a> / <span class="mono">{{ m.id }}</span></p>
+<h1><span class="type t-{{ m.type }}">{{ m.type }}</span> <small class="muted mono">#{{ m.seq }}</small></h1>
+<dl class="facts">
+  <dt>Time (UTC)</dt><dd><time>{{ m.created_at | ts }}</time></dd>
+  <dt>From</dt><dd>{% if m.sender.kind == 'human' %}{{ names.get(m.sender.id, m.sender.id) }} (human{% if m.sender.party_id %}, party {{ m.sender.party_id }}{% endif %}){% else %}{{ m.sender.id }} (agent{% if agent_party.get(m.sender.id) %}, {{ parties.get(agent_party[m.sender.id], agent_party[m.sender.id]) }}'s{% endif %}) <span class="aw-inline">agent-written</span>{% endif %}</dd>
+  <dt>To</dt><dd>{% for a in recipients %}<a href="/app/messages?to={{ a | urlencode }}">{{ a }}</a>{% if not loop.last %}, {% endif %}{% endfor %}</dd>
+  <dt>Task</dt><dd><a href="/app/tasks/{{ t.id }}">{{ t.title | reveal }}</a> <small class="mono muted">{{ t.id }}</small> {{ state(t.state) }}</dd>
+  {% if m.in_reply_to %}<dt>In reply to</dt><dd><a href="/app/messages/{{ m.in_reply_to }}" class="mono">{{ m.in_reply_to }}</a></dd>{% endif %}
+</dl>
+<p class="small"><a href="/app/tasks/{{ t.id }}#{{ m.id }}">Show in the task thread</a> <span class="muted">(older messages may be on an earlier page of the thread)</span></p>
+
+{% set text = m.body.text or '' %}
+<h2>Body</h2>
+{% if text is hidden %}<p class="banner bad">This message contains hidden or direction-changing characters (bidi overrides,
+zero-width or control characters). They are shown below as <code>\uXXXX</code> markers.</p>{% endif %}
+<div class="untrusted"><span class="aw">{{ 'agent-written · untrusted' if m.sender.kind == 'agent' else 'human-written' }}</span><pre class="body">{% if text %}{{ text | reveal }}{% else %}(no text){% endif %}</pre></div>
+{% set data = m.body.data or {} %}
+{% if m.body.refs %}<h3>References</h3><ul class="refs">
+  {% for r in m.body.refs %}<li><span class="badge">{{ r.kind }}</span>
+    {% if r.kind == 'url' %}<code class="extlink">{{ r.value | reveal }}</code> <small class="muted">(external, untrusted - copy to open)</small>
+    {% elif r.kind == 'task' and r.value is bridge_id('tsk_') %}<a href="/app/tasks/{{ r.value }}">{{ r.value }}</a>
+    {% else %}<code>{{ r.value | reveal }}</code>{% endif %}
+    {% if r.label %} — {{ r.label | reveal }}{% endif %}</li>{% endfor %}
+</ul>{% endif %}
+{% if data %}<h3>Data (JSON, non-ASCII escaped)</h3><pre class="payload">{{ data | pretty }}</pre>{% endif %}
+<p class="small muted">Read-only view. To act on this task, open the <a href="/app/tasks/{{ t.id }}">task page</a>.</p>
+{% endblock %}

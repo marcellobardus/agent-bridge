@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="same-origin">
+<meta name="robots" content="noindex, nofollow">
+<title>{% block title %}Agent Bridge{% endblock %} · Agent Bridge</title>
+<link rel="stylesheet" href="/app/static/dashboard.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/app/">Agent Bridge</a>
+  {% if me %}
+  <nav>
+    <a href="/app/"{% if path == '/app/' %} class="on"{% endif %}>Overview</a>
+    <a href="/app/tasks"{% if path.startswith('/app/tasks') %} class="on"{% endif %}>Tasks</a>
+    <a href="/app/messages"{% if path.startswith('/app/messages') %} class="on"{% endif %}>Messages</a>
+    <a href="/app/approvals"{% if path.startswith('/app/approvals') %} class="on"{% endif %}>Approvals{% if my_pending %} <span class="count">{{ my_pending }}</span>{% endif %}</a>
+    <a href="/app/agents"{% if path.startswith('/app/agents') %} class="on"{% endif %}>Agents</a>
+    <a href="/app/audit"{% if path.startswith('/app/audit') %} class="on"{% endif %}>Audit</a>
+  </nav>
+  <div class="who">
+    <span>{{ me.display_name }} <small>({{ me.party_id }})</small></span>
+    {% if step_up_ok %}<span class="badge ok" title="TOTP step-up valid">step-up ✓</span>{% endif %}
+    <form method="post" action="/app/logout" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <button type="submit" class="link">Log out</button>
+    </form>
+  </div>
+  {% endif %}
+</header>
+<main>
+{% if flash %}<p class="flash ok">{{ flash }}</p>{% endif %}
+{% block content %}{% endblock %}
+</main>
+{% if me %}
+<footer>
+  Audit chain head: <code>#{{ audit_head.seq }}</code> <code class="hash">{{ audit_head.hash }}</code>
+  <span class="muted">— record it out-of-band; verify with <code>bridgectl audit verify --contains HASH</code></span>
+</footer>
+{% endif %}
+</body>
+</html>

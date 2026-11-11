@@ -1,0 +1,59 @@
+[Unit]
+Description=Agent Bridge ngrok tunnel (outbound only)
+After=network-online.target agent-bridge.service
+Wants=network-online.target
+# Only start when the owner has created the secrets file.
+ConditionPathExists=/etc/agent-bridge/ngrok.env
+
+[Service]
+Type=simple
+User=ngrok
+Group=ngrok
+# /etc/agent-bridge/ngrok.env (root:root 0600) holds NGROK_AUTHTOKEN and NGROK_DOMAIN.
+# systemd reads it as root; the ngrok user cannot read the file itself.
+EnvironmentFile=/etc/agent-bridge/ngrok.env
+Environment=GOMEMLIMIT=72MiB
+Environment=HOME=/var/lib/agent-bridge-ngrok
+RuntimeDirectory=agent-bridge-ngrok
+RuntimeDirectoryMode=0700
+StateDirectory=agent-bridge-ngrok
+StateDirectoryMode=0700
+# Render the secret-free template (domain only) into /run; the authtoken is read by ngrok from $NGROK_AUTHTOKEN.
+ExecStartPre=/opt/agent-bridge/current/deploy/ngrok/render-config.sh /opt/agent-bridge/current/deploy/ngrok/ngrok.yml.tmpl /run/agent-bridge-ngrok/ngrok.yml
+ExecStart=/usr/local/bin/ngrok start --all --config /run/agent-bridge-ngrok/ngrok.yml
+Restart=on-failure
+RestartSec=10
+# resources
+MemoryHigh=84M
+MemoryMax=96M
+MemorySwapMax=0
+TasksMax=128
+OOMScoreAdjust=300
+LimitNOFILE=2048
+# outbound only: no listening sockets besides none (web_addr is false); upstream is loopback
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+InaccessiblePaths=/etc/agent-bridge/credentials /var/lib/agent-bridge /var/backups/agent-bridge
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectProc=invisible
+ProcSubset=pid
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% from "macros.html" import step_up_form %}
+{% block title %}Agents &amp; keys{% endblock %}
+{% block content %}
+<h1>Agents &amp; keys</h1>
+<p class="muted small">You can pause/resume your own party's agents and mint or revoke their keys. These need a TOTP step-up (5 minutes).</p>
+{% if not step_up_ok %}{{ step_up_form('/app/agents', csrf) }}{% endif %}
+<div class="scroll"><table class="list">
+<thead><tr><th>Agent</th><th>Party</th><th>Status</th><th>Last poll</th><th>Unacked events</th><th>Msgs 24 h</th><th>Open tasks</th><th>Actions</th></tr></thead>
+<tbody>
+{% for a in agents %}{% set s = stats.get(a.id, {}) %}
+<tr>
+  <td data-l="Agent"><a href="/app/agents/{{ a.id }}">{{ a.id }}</a><br><small class="muted">{{ a.display_name }}</small></td>
+  <td data-l="Party">{{ a.party_id }}</td>
+  <td data-l="Status">{% if a.disabled %}<span class="badge bad">disabled</span>{% elif a.paused %}<span class="badge warn">paused</span>{% else %}<span class="badge ok">active</span>{% endif %}</td>
+  <td data-l="Last poll"><time>{{ a.last_poll_at | ts }}</time></td>
+  <td data-l="Unacked">{{ s.unacked }}</td>
+  <td data-l="Msgs 24 h">{{ s.messages_24h }}</td>
+  <td data-l="Open tasks"><a href="/app/tasks?agent={{ a.id }}">{{ s.open_tasks }}</a></td>
+  <td data-l="Actions">
+  {% if a.party_id == me.party_id %}
+    <form method="post" action="/app/agents/{{ a.id }}/{{ 'resume' if a.paused else 'pause' }}" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <button type="submit" class="{{ 'good' if a.paused else 'warn' }}">{{ 'Resume' if a.paused else 'Pause' }}</button>
+    </form>
+    <form method="post" action="/app/agents/{{ a.id }}/keys" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <input name="label" placeholder="key label" maxlength="60" size="10">
+      <button type="submit">Mint key</button>
+    </form>
+  {% else %}<span class="muted small">other party</span>{% endif %}
+  </td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+
+<h2>API keys</h2>
+<div class="scroll"><table class="list">
+<thead><tr><th>Key id</th><th>Agent</th><th>Label</th><th>Scopes</th><th>Created</th><th>Last used</th><th>Expires</th><th>Status</th></tr></thead>
+<tbody>
+{% for k in keys %}{% set mine = (agents | selectattr('id', 'equalto', k.agent_id) | map(attribute='party_id') | first) == me.party_id %}
+<tr>
+  <td data-l="Key id"><code>{{ k.id }}</code></td>
+  <td data-l="Agent">{{ k.agent_id }}</td>
+  <td data-l="Label">{{ k.label }}</td>
+  <td data-l="Scopes"><small>{{ k.scopes | join(', ') }}</small></td>
+  <td data-l="Created"><time>{{ k.created_at | ts }}</time></td>
+  <td data-l="Last used"><time>{{ k.last_used_at | ts }}</time></td>
+  <td data-l="Expires"><time>{{ k.expires_at | ts }}</time></td>
+  <td data-l="Status">{% if k.revoked_at %}<span class="badge bad">revoked {{ k.revoked_at | ts }}</span>
+    {% elif mine %}<form method="post" action="/app/keys/{{ k.id }}/revoke" class="inline">
+      <input type="hidden" name="csrf_token" value="{{ csrf }}">
+      <button type="submit" class="danger">Revoke</button></form>
+    {% else %}<span class="badge ok">active</span>{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% endblock %}

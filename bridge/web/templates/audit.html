@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Audit log{% endblock %}
+{% block content %}
+<h1>Audit log</h1>
+<p class="card">Chain head: <code>#{{ head_seq }}</code> <code class="hash">{{ head }}</code><br>
+<small class="muted">Append-only, hash-chained (each row's hash covers the previous one). Record the head somewhere outside this server; <code>bridgectl audit verify --contains HASH</code> proves later that it is still in the chain.</small></p>
+<form method="get" action="/app/audit" class="filters">
+  <label>Action <input name="action" value="{{ f.action or '' }}" placeholder="approval.decide or prefix approval." maxlength="60"></label>
+  <label>Actor <input name="actor" value="{{ f.actor or '' }}" placeholder="agent id, hum_…, login" maxlength="64"></label>
+  <label>Target id <input name="target" value="{{ f.target or '' }}" placeholder="tsk_…, apr_…, key id" maxlength="64"></label>
+  <button type="submit">Search</button> <a href="/app/audit">Reset</a>
+</form>
+<div class="scroll"><table class="list audit">
+<thead><tr><th>#</th><th>Time</th><th>Actor</th><th>Action</th><th>Target</th><th>Detail</th><th>Hash</th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  <td data-l="#">{{ r.seq }}</td>
+  <td data-l="Time"><time>{{ r.ts | ts }}</time></td>
+  <td data-l="Actor">{{ r.actor_kind }}:<a href="?actor={{ r.actor_id | urlencode }}">{{ r.actor_id }}</a>{% if r.credential_id %} <small class="muted">[{{ r.credential_id }}]</small>{% endif %}</td>
+  <td data-l="Action"><a href="?action={{ r.action | urlencode }}">{{ r.action }}</a></td>
+  <td data-l="Target">{{ r.target_kind or '' }}
+    {% if r.target_id is bridge_id('tsk_') %}<a href="/app/tasks/{{ r.target_id }}" class="mono">{{ r.target_id }}</a>
+    {% elif r.target_id is bridge_id('apr_') %}<a href="/app/approvals/{{ r.target_id }}" class="mono">{{ r.target_id }}</a>
+    {% elif r.target_id %}<a href="?target={{ r.target_id | urlencode }}" class="mono">{{ r.target_id }}</a>{% endif %}</td>
+  <td data-l="Detail"><small>{{ r.detail | compact if r.detail else '' }}</small></td>
+  <td data-l="Hash"><code class="hash small" title="{{ r.hash }}">{{ r.hash[:12] }}…</code></td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% if older %}<p class="pager"><a href="?{{ f | dictsort | rejectattr(1, 'none') | list | urlencode }}&amp;before_seq={{ older }}">Older →</a></p>{% endif %}
+{% endblock %}

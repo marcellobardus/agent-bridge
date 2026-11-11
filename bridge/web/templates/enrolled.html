@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Authenticator setup{% endblock %}
+{% block content %}
+<section class="narrow card">
+<h1>Add this account to your authenticator</h1>
+<p class="flash warn">Shown <b>once</b>. Scan it now; reloading will not show it again.</p>
+<div class="qr">{{ qr }}</div>
+<p>Or type the secret manually (TOTP, SHA-1, 6 digits, 30 s):</p>
+<p><code class="secret">{{ secret }}</code></p>
+<p>Then <a href="/app/login">log in</a> with your password and a current code. The first successful login confirms the setup.</p>
+</section>
+{% endblock %}

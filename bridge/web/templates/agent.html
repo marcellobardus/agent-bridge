@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% from "macros.html" import task_table %}
+{% block title %}Agent {{ agent.id }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/app/agents">Agents</a> / {{ agent.id }}</p>
+<h1>{{ agent.id }} <small class="muted">{{ agent.display_name }}, party {{ agent.party_id }}</small>
+{% if agent.paused %}<span class="badge warn">paused</span>{% endif %}{% if agent.disabled %}<span class="badge bad">disabled</span>{% endif %}</h1>
+<div class="tiles">
+  <div class="tile"><b><time>{{ agent.last_poll_at | ts }}</time></b><span>last inbox poll</span></div>
+  <div class="tile"><b>{{ stats.unacked }}</b><span>unacked inbox events (acked cursor {{ agent.acked_seq or 0 }})</span></div>
+  <div class="tile"><b>{{ stats.messages_24h }}</b><span>messages in 24 h</span></div>
+  <div class="tile"><b>{{ stats.active_keys }}</b><span>active keys</span></div>
+</div>
+
+<h2>Open tasks</h2>
+{{ task_table(open_tasks, 'No open tasks.') }}
+
+<h2>Recent messages <span class="aw-inline">agent-written</span></h2>
+{% if messages %}<ol class="timeline">
+{% for m in messages %}<li class="msg agent">
+  <header><span class="type">{{ m.type }}</span> <a href="/app/tasks/{{ m.task_id }}#{{ m.id }}">{{ m.task_title | truncate(60) }}</a> <time>{{ m.created_at | ts }}</time></header>
+  {% if m.text %}<pre class="body">{{ m.text }}</pre>{% endif %}
+</li>{% endfor %}
+</ol>{% else %}<p class="muted">None.</p>{% endif %}
+
+<h2>Recent activity (audit)</h2>
+<div class="scroll"><table class="list">
+<thead><tr><th>#</th><th>Time</th><th>Action</th><th>Target</th><th>Key</th></tr></thead>
+<tbody>
+{% for r in events %}<tr><td data-l="#">{{ r.seq }}</td><td data-l="Time"><time>{{ r.ts | ts }}</time></td><td data-l="Action">{{ r.action }}</td>
+<td data-l="Target">{{ r.target_kind or '' }} {% if r.target_id is bridge_id('tsk_') %}<a href="/app/tasks/{{ r.target_id }}" class="mono">{{ r.target_id }}</a>{% else %}<span class="mono">{{ r.target_id or '' }}</span>{% endif %}</td>
+<td data-l="Key"><code>{{ r.credential_id or '' }}</code></td></tr>{% endfor %}
+</tbody></table></div>
+<p><a href="/app/audit?actor={{ agent.id }}">Full audit trail for {{ agent.id }} →</a></p>
+{% endblock %}

@@ -1,0 +1,11 @@
+# Runtime dependencies. Lock with hashes for deploys:
+#   scripts/lock.sh   (needs uv; writes requirements.lock)
+# then install with: pip install --require-hashes --only-binary=:all: --no-cache-dir -r requirements.lock
+fastapi
+uvicorn
+pydantic
+jinja2
+python-multipart
+argon2-cffi
+cryptography
+segno

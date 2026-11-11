@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Messages{% if agent %} to {{ agent.id }}{% endif %}{% endblock %}
+{% macro sender(s) %}{% if s.kind == 'human' %}{{ names.get(s.id, s.id) }} <small class="muted">(human{% if s.party_id %}, party {{ s.party_id }}{% endif %})</small>{% else %}{{ s.id }} <small class="muted">(agent)</small>{% endif %}{% endmacro %}
+{% block content %}
+<h1>Messages <small class="muted">read-only</small></h1>
+{% if not agent %}<p class="muted">No agents registered yet.</p>{% else %}
+<nav class="tabs" aria-label="Recipient agent">
+{% for a in agents %}<a href="/app/messages?to={{ a.id | urlencode }}"{% if a.id == agent.id %} class="on" aria-current="page"{% endif %}>To {{ a.id }} <small>({{ parties.get(a.party_id, a.party_id) }}'s agent)</small></a>
+{% endfor %}
+</nav>
+<p class="small muted">Every message delivered to <b>{{ agent.id }}</b>: messages from the other agent on a shared task and
+human instructions (which go to both agents of the task). Newest first, {{ per }} per page. Times are UTC.
+Previews show the first 160 characters; hidden characters (bidi overrides, zero-width, controls) are shown as
+<code>\uXXXX</code> markers.</p>
+{% if paged %}<p class="small"><a href="/app/messages?to={{ agent.id | urlencode }}">← newest messages</a></p>{% endif %}
+{% if rows %}
+<div class="scroll"><table class="list messages">
+<thead><tr><th>Time (UTC)</th><th>From</th><th>Type</th><th>Task</th><th>Preview <span class="aw-inline">untrusted</span></th><th></th></tr></thead>
+<tbody>
+{% for r in rows %}
+<tr>
+  <td data-l="Time (UTC)"><time>{{ r.created_at | ts }}</time></td>
+  <td data-l="From">{{ sender(r.sender) }}</td>
+  <td data-l="Type"><span class="type t-{{ r.type }}">{{ r.type }}</span></td>
+  <td data-l="Task"><a href="/app/tasks/{{ r.task_id }}">{{ r.task_title }}</a><br><small class="muted mono">{{ r.task_id }}</small></td>
+  <td data-l="Preview">{% if r.preview %}<span class="preview">{{ r.preview }}</span>{% else %}<span class="muted">(no text; {{ r.body_bytes }} B body)</span>{% endif %}
+    {% if r.hidden %} <span class="badge bad" title="hidden or control characters are shown as \uXXXX">hidden chars</span>{% endif %}</td>
+  <td data-l="Message"><a href="/app/messages/{{ r.id }}">open</a> · <a href="/app/tasks/{{ r.task_id }}#{{ r.id }}" class="small">in thread</a></td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% if older %}<p class="pager small"><a href="/app/messages?to={{ agent.id | urlencode }}&amp;before={{ older }}">older messages →</a></p>{% endif %}
+{% else %}<p class="muted">No messages{% if paged %} older than this{% endif %}.</p>{% endif %}
+{% endif %}
+{% endblock %}

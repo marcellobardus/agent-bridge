@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Enrollment{% endblock %}
+{% block content %}
+<section class="narrow card">
+<h1>Set up your account</h1>
+{% if error %}<p class="flash bad">{% if error.code == 'enrollment_invalid' %}This link is invalid, already used or expired. Ask the admin for a new one.{% elif error.code == 'weak_password' %}The password must be at least 12 characters.{% elif error.code == 'password_mismatch' %}The passwords differ.{% elif error.code in ('bad_origin', 'csrf_failed') %}{% include "_open_directly.html" %}{% else %}{{ error.title }}: {{ error.detail }}{% endif %}</p>{% endif %}
+{% if enroll %}
+<p>Login: <b>{{ enroll.login }}</b> ({{ enroll.display_name }}, party <b>{{ enroll.party_id }}</b>){% if enroll.human_id %} — this is a <b>reset</b>: your old password and authenticator stop working{% endif %}.</p>
+{% endif %}
+{% if enroll or (error and error.code != 'enrollment_invalid') %}
+<form method="post" action="/app/enroll/{{ token }}" class="stack">
+  <input type="hidden" name="pre_csrf" value="{{ pre_csrf }}">
+  <label>New password (at least 12 characters) <input type="password" name="password" autocomplete="new-password" minlength="12" required></label>
+  <label>Repeat password <input type="password" name="password2" autocomplete="new-password" minlength="12" required></label>
+  <button type="submit">Set password and show my TOTP code</button>
+</form>
+<p class="muted small">Next you will scan a QR code with an authenticator app (6 digits, 30 s). It is shown only once.</p>
+{% endif %}
+</section>
+{% endblock %}

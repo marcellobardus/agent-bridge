@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "macros.html" import step_up_form %}
+{% block title %}Step-up{% endblock %}
+{% block content %}
+<section class="narrow">
+<h1>Confirm with your password and a TOTP code</h1>
+{% if error and error.code == 'step_up_failed' %}<p class="flash bad">Wrong password, or an invalid or already used code. Wait for the next code and retry. Five failures log this session out.</p>
+{% elif error and error.code == 'step_up_required' %}<p class="flash warn">This action needs a fresh step-up. Confirm, then repeat the action.</p>
+{% elif error %}<p class="flash bad">{{ error.title }}: {{ error.detail }} <small>(<code>{{ error.code }}</code>)</small></p>{% endif %}
+{{ step_up_form(next, csrf) }}
+<p><a href="{{ next }}">Back</a></p>
+</section>
+{% endblock %}

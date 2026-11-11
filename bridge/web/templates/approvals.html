@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+{% from "macros.html" import approval_table %}
+{% block title %}Approvals{% endblock %}
+{% block content %}
+<h1>Approvals</h1>
+<p class="muted small">Consequential actions (production deploys, fund movements, mainnet upgrades, live trading, credential changes) need a human of the requesting agent's party. Each approval covers one exact payload (SHA-256) and can be used once.</p>
+<form method="get" action="/app/approvals" class="filters">
+  <label>Search <input type="search" name="q" value="{{ f.q or '' }}" placeholder="summary, kind, note, task title or id" maxlength="200"></label>
+  <label>State <select name="state"><option value="all"{% if f.state == 'all' %} selected{% endif %}>all (incl. previous decisions)</option>
+    {% for s in states %}<option value="{{ s }}"{% if f.state == s %} selected{% endif %}>{{ s }}</option>{% endfor %}
+  </select></label>
+  <label>Approver party <select name="party"><option value="">both</option>
+    {% for p in parties %}<option value="{{ p }}"{% if f.party == p %} selected{% endif %}>{{ p }}</option>{% endfor %}
+  </select></label>
+  <button type="submit">Filter</button>
+</form>
+{{ approval_table(approvals, names) }}
+{% endblock %}

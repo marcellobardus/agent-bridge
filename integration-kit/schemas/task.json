@@ -1,0 +1,179 @@
+{
+  "$id": "https://agent-bridge.invalid/schemas/TaskOut",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "acceptance_criteria": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Acceptance Criteria",
+      "type": "array"
+    },
+    "category": {
+      "title": "Category",
+      "type": "string"
+    },
+    "clarification_rounds": {
+      "title": "Clarification Rounds",
+      "type": "integer"
+    },
+    "closed_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Closed At"
+    },
+    "component": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Component"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "hop_count": {
+      "title": "Hop Count",
+      "type": "integer"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "message_count": {
+      "title": "Message Count",
+      "type": "integer"
+    },
+    "originator_agent_id": {
+      "title": "Originator Agent Id",
+      "type": "string"
+    },
+    "parent_task_id": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Parent Task Id"
+    },
+    "paused": {
+      "title": "Paused",
+      "type": "boolean"
+    },
+    "priority": {
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "title": "Priority",
+      "type": "string"
+    },
+    "project": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Project"
+    },
+    "related_task_ids": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Related Task Ids",
+      "type": "array"
+    },
+    "responsible_agent_id": {
+      "title": "Responsible Agent Id",
+      "type": "string"
+    },
+    "resume_state": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Resume State"
+    },
+    "state": {
+      "enum": [
+        "proposed",
+        "accepted",
+        "in_progress",
+        "ready_for_validation",
+        "verified",
+        "closed",
+        "blocked",
+        "rejected",
+        "needs_human"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "updated_at": {
+      "title": "Updated At",
+      "type": "string"
+    },
+    "version": {
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "title",
+    "description",
+    "state",
+    "resume_state",
+    "version",
+    "priority",
+    "category",
+    "originator_agent_id",
+    "responsible_agent_id",
+    "paused",
+    "acceptance_criteria",
+    "project",
+    "component",
+    "related_task_ids",
+    "parent_task_id",
+    "hop_count",
+    "clarification_rounds",
+    "message_count",
+    "created_at",
+    "updated_at",
+    "closed_at"
+  ],
+  "title": "Task as returned by the bridge",
+  "type": "object",
+  "x-generated-from": "docs/openapi.json#/components/schemas/TaskOut"
+}

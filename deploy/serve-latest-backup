@@ -1,0 +1,8 @@
+#!/bin/sh
+# Forced command for the `bridge-backup` SSH key: stream the newest encrypted snapshot, read-only.
+# Exits non-zero if none is readable.
+set -eu
+DEST=/var/backups/agent-bridge
+f=$(ls -1 "$DEST"/bridge-*.db.gz.age 2>/dev/null | sort | tail -n 1 || true)
+[ -n "$f" ] && [ -r "$f" ] && [ -s "$f" ] || { echo "no readable snapshot" >&2; exit 1; }
+exec cat -- "$f"

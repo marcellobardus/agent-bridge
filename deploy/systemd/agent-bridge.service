@@ -1,0 +1,59 @@
+[Unit]
+Description=Agent Bridge (API + dashboard)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=exec
+User=agent-bridge
+Group=agent-bridge
+ExecStart=/opt/agent-bridge/current/venv/bin/python -I -B -m bridge.serve --config /etc/agent-bridge/config.toml
+LoadCredential=pepper:/etc/agent-bridge/credentials/pepper
+LoadCredential=totp_kek:/etc/agent-bridge/credentials/totp_kek
+StateDirectory=agent-bridge
+StateDirectoryMode=0700
+Restart=on-failure
+RestartSec=3
+# resources
+MemoryHigh=160M
+MemoryMax=192M
+MemorySwapMax=0
+# 40-thread pool + sweeper + main thread + headroom for failed-start margin
+TasksMax=64
+CPUQuota=70%
+OOMScoreAdjust=500
+LimitNOFILE=1024
+# network: loopback only, inbound and outbound
+IPAddressDeny=any
+IPAddressAllow=localhost
+RestrictAddressFamilies=AF_INET AF_UNIX
+# sandbox
+# Optional: hide other services on the host from this unit, e.g. InaccessiblePaths=/path/to/other/service
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectProc=invisible
+ProcSubset=pid
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallFilter=~@privileged @resources
+SystemCallErrorNumber=EPERM
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target

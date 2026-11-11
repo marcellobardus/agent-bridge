@@ -1,0 +1,17 @@
+# Secret-scan configuration (gitleaks). Extends the default rules; allowlists only known test fixtures and
+# key-format regexes. Do not add broad path allowlists.
+title = "agent-bridge"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "test fixtures and key-format regexes"
+paths = [
+  '''^tests/test_ops\.py$''',
+  '''^tests/test_logs\.py$''',
+]
+# the base-36 alphabet constant in bridge/domain/keys.py (key-id generation), flagged as a "generic key"
+regexes = [
+  '''abcdefghijklmnopqrstuvwxyz0123456789''',
+]

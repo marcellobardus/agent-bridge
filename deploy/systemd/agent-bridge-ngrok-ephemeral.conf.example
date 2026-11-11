@@ -1,0 +1,14 @@
+# Drop-in for the "no reserved domain yet" fallback (docs/OPS.md). Install as
+#   /etc/systemd/system/agent-bridge-ngrok.service.d/ephemeral.conf  (root 0644), then
+#   systemctl daemon-reload && systemctl restart agent-bridge-ngrok
+# Remove it (and daemon-reload) as soon as a domain is pinned: the random URL changes on every ngrok restart.
+# - ExecStartPre= clears render-config.sh (the ephemeral config has no @NGROK_DOMAIN@ to fill in).
+# - The config is the reviewed copy inside the release (root-owned, world-readable; the unit's sandbox leaves
+#   /opt/agent-bridge readable for User=ngrok, as for the main template), not a hand-made file in /etc.
+# - ExecStartPost runs as root ("+") and copies the tunnel URL from this invocation's journal into public_origin.
+[Service]
+ExecStartPre=
+ExecStart=
+ExecStart=/usr/local/bin/ngrok start --all --config /opt/agent-bridge/current/deploy/ngrok/ngrok-ephemeral.yml
+ExecStartPost=+/bin/sh -c 'sleep 8; /usr/local/sbin/agent-bridge-sync-origin >/dev/null'
+TimeoutStartSec=60

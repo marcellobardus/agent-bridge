@@ -1,0 +1,171 @@
+{
+  "$defs": {
+    "Ref": {
+      "additionalProperties": false,
+      "description": "A reference (link, commit, PR, task id). Stored as data; the server never fetches it.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "url",
+            "commit",
+            "pr",
+            "task",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Label"
+        },
+        "value": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "title": "Ref",
+      "type": "object"
+    }
+  },
+  "$id": "https://agent-bridge.invalid/schemas/TaskCreate",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "acceptance_criteria": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Acceptance Criteria",
+      "type": "array"
+    },
+    "category": {
+      "enum": [
+        "business_requirements",
+        "strategy_research",
+        "qa",
+        "simulation",
+        "product_validation",
+        "business_ops",
+        "experiment",
+        "implementation",
+        "smart_contract",
+        "backend",
+        "frontend",
+        "architecture",
+        "infrastructure",
+        "deployment",
+        "bug_fix",
+        "engineering_validation"
+      ],
+      "title": "Category",
+      "type": "string"
+    },
+    "component": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Component"
+    },
+    "description": {
+      "maxLength": 16000,
+      "minLength": 1,
+      "title": "Description",
+      "type": "string"
+    },
+    "parent_task_id": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Parent Task Id"
+    },
+    "priority": {
+      "default": "normal",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "title": "Priority",
+      "type": "string"
+    },
+    "project": {
+      "anyOf": [
+        {
+          "maxLength": 100,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Project"
+    },
+    "refs": {
+      "items": {
+        "$ref": "#/$defs/Ref"
+      },
+      "maxItems": 20,
+      "title": "Refs",
+      "type": "array"
+    },
+    "related_task_ids": {
+      "items": {
+        "type": "string"
+      },
+      "maxItems": 20,
+      "title": "Related Task Ids",
+      "type": "array"
+    },
+    "responsible_agent_id": {
+      "maxLength": 32,
+      "minLength": 2,
+      "pattern": "^[a-z][a-z0-9_-]*$",
+      "title": "Responsible Agent Id",
+      "type": "string"
+    },
+    "title": {
+      "maxLength": 200,
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    }
+  },
+  "required": [
+    "title",
+    "description",
+    "responsible_agent_id",
+    "category"
+  ],
+  "title": "POST /v1/tasks request body",
+  "type": "object",
+  "x-generated-from": "docs/openapi.json#/components/schemas/TaskCreate"
+}

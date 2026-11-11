@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}New key{% endblock %}
+{% block content %}
+<section class="narrow card">
+<h1>New API key for {{ agent_id }}</h1>
+<p class="flash warn">Shown <b>once</b>. Copy it into the agent's secret store now. It is not stored in readable form and cannot be shown again.</p>
+<p>Key id: <code>{{ key_id }}</code></p>
+<pre class="secret">{{ token }}</pre>
+<p class="muted small">Never paste it into chat, tickets or task messages. Revoke the old key once the agent works with the new one.</p>
+<p><a href="/app/agents">Back to agents</a></p>
+</section>
+{% endblock %}

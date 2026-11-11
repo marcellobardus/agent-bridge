@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+{% block title %}Log in{% endblock %}
+{% block content %}
+<section class="narrow card">
+<h1>Log in</h1>
+{% if error %}<p class="flash bad">{% if error.code == 'login_throttled' %}Too many attempts from your address. Wait {{ error.headers.get('Retry-After', 'a few') }} seconds and retry.{% elif error.code in ('bad_origin', 'csrf_failed') %}{% include "_open_directly.html" %}{% else %}Invalid login, password or code.{% endif %}</p>{% endif %}
+<form method="post" action="/app/login" class="stack">
+  <input type="hidden" name="pre_csrf" value="{{ pre_csrf }}">
+  <label>Login <input name="login" autocomplete="username" autocapitalize="none" required maxlength="64"></label>
+  <label>Password <input type="password" name="password" autocomplete="current-password" required></label>
+  <label>TOTP code <input name="totp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+  <button type="submit">Log in</button>
+</form>
+<p class="muted small">Lost your password or authenticator? Ask the admin for a reset link (<code>bridgectl human reset LOGIN</code>).</p>
+</section>
+{% endblock %}

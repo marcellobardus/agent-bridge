@@ -1,0 +1,23 @@
+# ngrok agent config (v3) for the "no reserved domain yet" fallback (docs/OPS.md). No secrets in this file:
+# the authtoken comes from $NGROK_AUTHTOKEN (/etc/agent-bridge/ngrok.env via the unit's EnvironmentFile).
+# Used only through deploy/systemd/agent-bridge-ngrok-ephemeral.conf.example, which points at the copy shipped in
+# the release (/opt/agent-bridge/current/deploy/ngrok/ngrok-ephemeral.yml), so this file is the reviewed one.
+# - No endpoint `url`: ngrok assigns a random hostname that changes on every restart.
+# - log_level info (the main template uses warn): agent-bridge-sync-origin (deploy/ngrok/sync-origin.sh) and
+#   `bridgectl doctor` read the tunnel URL from the tunnel-started line, which ngrok logs at info level only.
+# - web_addr false: no local inspector/API listener on 127.0.0.1:4040 (any local process could read it).
+# - inspect_db_size -1: no request capture, so bearer keys, passwords and TOTP codes are never kept in memory.
+#   Both MUST stay as they are; tests/test_deploy_domain.py checks them.
+version: 3
+agent:
+  web_addr: false
+  inspect_db_size: -1
+  console_ui: false
+  update_check: false
+  log: stdout
+  log_format: json
+  log_level: info
+endpoints:
+  - name: bridge
+    upstream:
+      url: "http://127.0.0.1:8787"

@@ -1,0 +1,183 @@
+{
+  "$id": "https://agent-bridge.invalid/schemas/ProblemOut",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "code": {
+      "enum": [
+        "action_too_deep",
+        "action_too_large",
+        "agent_paused",
+        "already_consumed",
+        "already_responded",
+        "approval_expired",
+        "approval_not_found",
+        "approval_pending",
+        "artifact_not_found",
+        "artifact_quota_exceeded",
+        "artifact_too_large",
+        "content_mismatch",
+        "daily_limit",
+        "data_too_deep",
+        "data_too_large",
+        "duplicate_task",
+        "empty_artifact",
+        "hash_mismatch",
+        "humans_only",
+        "idempotency_key_reuse",
+        "internal_error",
+        "invalid_body",
+        "invalid_idempotency_key",
+        "invalid_key",
+        "invalid_parent",
+        "invalid_transition",
+        "loop_guard",
+        "message_too_large",
+        "message_type_not_allowed",
+        "missing_idempotency_key",
+        "not_approved",
+        "not_found",
+        "not_pending",
+        "not_ready_for_validation",
+        "ownership_violation",
+        "payload_too_large",
+        "rate_limited",
+        "reason_required",
+        "scope_missing",
+        "self_assignment",
+        "sender_not_allowed",
+        "server_busy",
+        "storage_degraded",
+        "task_closed",
+        "task_not_found",
+        "task_paused",
+        "too_many_in_flight",
+        "too_many_keys",
+        "transition_forbidden",
+        "unknown_agent",
+        "unknown_artifact",
+        "unknown_parent",
+        "unsupported_media_type",
+        "validation_error",
+        "version_conflict",
+        "wrong_party"
+      ],
+      "title": "Code",
+      "type": "string"
+    },
+    "detail": {
+      "title": "Detail",
+      "type": "string"
+    },
+    "request_id": {
+      "title": "Request Id",
+      "type": "string"
+    },
+    "status": {
+      "title": "Status",
+      "type": "integer"
+    },
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "type": {
+      "default": "about:blank",
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "code",
+    "title",
+    "status",
+    "detail",
+    "request_id"
+  ],
+  "title": "application/problem+json error body",
+  "type": "object",
+  "x-codes-by-status": {
+    "400": [
+      "missing_idempotency_key",
+      "invalid_idempotency_key"
+    ],
+    "401": [
+      "invalid_key"
+    ],
+    "403": [
+      "scope_missing",
+      "transition_forbidden",
+      "sender_not_allowed",
+      "ownership_violation",
+      "wrong_party",
+      "humans_only"
+    ],
+    "404": [
+      "task_not_found",
+      "approval_not_found",
+      "artifact_not_found",
+      "not_found"
+    ],
+    "409": [
+      "version_conflict",
+      "loop_guard",
+      "duplicate_task",
+      "task_paused",
+      "already_responded",
+      "not_ready_for_validation",
+      "approval_pending",
+      "not_approved",
+      "already_consumed",
+      "hash_mismatch",
+      "approval_expired",
+      "not_pending",
+      "too_many_keys"
+    ],
+    "410": [
+      "task_closed"
+    ],
+    "413": [
+      "payload_too_large",
+      "message_too_large",
+      "artifact_too_large",
+      "artifact_quota_exceeded",
+      "action_too_large",
+      "data_too_large"
+    ],
+    "415": [
+      "unsupported_media_type"
+    ],
+    "422": [
+      "validation_error",
+      "invalid_transition",
+      "reason_required",
+      "idempotency_key_reuse",
+      "invalid_body",
+      "invalid_parent",
+      "unknown_parent",
+      "unknown_artifact",
+      "unknown_agent",
+      "self_assignment",
+      "message_type_not_allowed",
+      "content_mismatch",
+      "empty_artifact",
+      "data_too_deep",
+      "action_too_deep"
+    ],
+    "423": [
+      "agent_paused"
+    ],
+    "429": [
+      "rate_limited",
+      "daily_limit",
+      "too_many_in_flight"
+    ],
+    "500": [
+      "internal_error"
+    ],
+    "503": [
+      "storage_degraded",
+      "server_busy"
+    ]
+  },
+  "x-generated-from": "docs/openapi.json#/components/schemas/ProblemOut"
+}

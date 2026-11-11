@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}Error{% endblock %}
+{% block content %}
+<section class="narrow card">
+<h1>{{ error.status }} · {{ error.title }}</h1>
+<p class="flash bad">{% if error.code in ('bad_origin', 'csrf_failed') %}{% include "_open_directly.html" %}{% else %}{{ error.detail }}{% endif %}</p>
+<p class="muted small">Code: <code>{{ error.code }}</code></p>
+<p><a href="{{ back }}">Back</a></p>
+</section>
+{% endblock %}

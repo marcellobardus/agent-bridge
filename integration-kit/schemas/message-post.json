@@ -1,0 +1,246 @@
+{
+  "$defs": {
+    "Body": {
+      "additionalProperties": false,
+      "description": "Message envelope. `text` is untrusted plain text; `data` is type-specific structured JSON\n(canonical JSON <= 16 KiB, nesting depth <= 8: `413 data_too_large` / `422 data_too_deep`).",
+      "properties": {
+        "data": {
+          "additionalProperties": true,
+          "title": "Data",
+          "type": "object"
+        },
+        "refs": {
+          "items": {
+            "$ref": "#/$defs/Ref"
+          },
+          "maxItems": 20,
+          "title": "Refs",
+          "type": "array"
+        },
+        "text": {
+          "default": "",
+          "maxLength": 16000,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "title": "Body",
+      "type": "object"
+    },
+    "Ref": {
+      "additionalProperties": false,
+      "description": "A reference (link, commit, PR, task id). Stored as data; the server never fetches it.",
+      "properties": {
+        "kind": {
+          "enum": [
+            "url",
+            "commit",
+            "pr",
+            "task",
+            "other"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "label": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Label"
+        },
+        "value": {
+          "maxLength": 2048,
+          "minLength": 1,
+          "title": "Value",
+          "type": "string"
+        }
+      },
+      "required": [
+        "kind",
+        "value"
+      ],
+      "title": "Ref",
+      "type": "object"
+    }
+  },
+  "$id": "https://agent-bridge.invalid/schemas/MessageIn",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "VALIDATION_RESULT"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "body": {
+            "properties": {
+              "data": {
+                "properties": {
+                  "outcome": {
+                    "enum": [
+                      "pass",
+                      "fail"
+                    ]
+                  }
+                },
+                "required": [
+                  "outcome"
+                ]
+              }
+            },
+            "required": [
+              "data"
+            ]
+          }
+        },
+        "required": [
+          "body"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "CLARIFICATION_RESPONSE"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "in_reply_to": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "in_reply_to"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "TASK_REJECTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "body": {
+            "properties": {
+              "text": {
+                "minLength": 1
+              }
+            },
+            "required": [
+              "text"
+            ]
+          }
+        },
+        "required": [
+          "body"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "ARTIFACT_SUBMITTED"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "body": {
+            "anyOf": [
+              {
+                "properties": {
+                  "data": {
+                    "properties": {
+                      "artifact_ids": {
+                        "items": {
+                          "type": "string"
+                        },
+                        "minItems": 1,
+                        "type": "array"
+                      }
+                    },
+                    "required": [
+                      "artifact_ids"
+                    ]
+                  }
+                },
+                "required": [
+                  "data"
+                ]
+              },
+              {
+                "properties": {
+                  "refs": {
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "refs"
+                ]
+              }
+            ]
+          }
+        },
+        "required": [
+          "body"
+        ]
+      }
+    }
+  ],
+  "properties": {
+    "body": {
+      "$ref": "#/$defs/Body"
+    },
+    "in_reply_to": {
+      "anyOf": [
+        {
+          "maxLength": 64,
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "In Reply To"
+    },
+    "type": {
+      "enum": [
+        "TASK_ACCEPTED",
+        "TASK_REJECTED",
+        "CLARIFICATION_REQUEST",
+        "CLARIFICATION_RESPONSE",
+        "PROGRESS_UPDATE",
+        "ARTIFACT_SUBMITTED",
+        "VALIDATION_RESULT",
+        "DECISION_REQUEST"
+      ],
+      "title": "Type",
+      "type": "string"
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "title": "POST /v1/tasks/{id}/messages request body (agent-postable types)",
+  "type": "object",
+  "x-generated-from": "docs/openapi.json#/components/schemas/MessageIn"
+}

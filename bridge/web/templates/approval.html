@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% from "macros.html" import state, untrusted, step_up_form %}
+{% block title %}Approval {{ a.kind }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="/app/approvals">Approvals</a> / <span class="mono">{{ a.id }}</span></p>
+<h1><span class="badge kind">{{ a.kind }}</span> approval {{ state(a.state) }}</h1>
+<div class="meta">
+  <span>task <a href="/app/tasks/{{ task.id }}">{{ task.title | truncate(80) }}</a> {{ state(task.state) }}</span>
+  <span>requested by <a href="/app/agents/{{ a.requested_by }}">{{ a.requested_by }}</a></span>
+  <span>approver party <b>{{ a.approver_party }}</b></span>
+  <span>created <time>{{ a.created_at | ts }}</time></span>
+  {% if a.state == 'pending' %}<span>expires <time>{{ a.expires_at | ts }}</time></span>{% endif %}
+  {% if a.valid_until %}<span>consume by <time>{{ a.valid_until | ts }}</time></span>{% endif %}
+  {% if a.consumed_at %}<span>consumed <time>{{ a.consumed_at | ts }}</time></span>{% endif %}
+</div>
+
+<h2>Summary</h2>
+{% if a.summary is suspicious %}<p><span class="badge bad">non-ASCII / invisible characters in the summary</span></p>{% endif %}
+{{ untrusted(a.summary) }}
+<p class="muted small">The summary is the agent's own description and may be wrong or misleading. Decide on the payload below.</p>
+
+<h2>Exact action payload</h2>
+<p class="flash info">This payload, and only this payload, is what you approve. The agent must present the same SHA-256 when it consumes the approval, once.</p>
+<p>SHA-256: <code class="hash">{{ a.action_sha256 }}</code>
+  {% if verified %}<span class="badge ok">matches stored canonical bytes</span>{% else %}<span class="badge bad">HASH MISMATCH — do not approve</span>{% endif %}</p>
+{% if canonical is suspicious %}<p class="flash bad"><span class="badge bad">WARNING: non-ASCII or control characters</span>
+The payload contains characters outside printable ASCII (possibly bidi overrides, zero-width characters or
+look-alike letters). They are shown below as <code>\uXXXX</code> escapes. Read every escaped value carefully; if in doubt, reject.</p>{% endif %}
+<h3>Pretty-printed <small class="muted">(non-ASCII shown as \uXXXX)</small></h3>
+<pre class="payload">{{ a.action | pretty }}</pre>
+<details><summary>Canonical JSON (the exact hashed bytes; non-ASCII shown as \uXXXX)</summary><pre class="payload">{{ canonical | ascii_view }}</pre></details>
+
+<h2>Decision</h2>
+{% if a.decided_by %}
+<p>{{ state(a.state) }} by <b>{{ names.get(a.decided_by, a.decided_by) }}</b> at <time>{{ a.decided_at | ts }}</time>.</p>
+{% if a.decision_note %}<p>Note: {{ a.decision_note }}</p>{% endif %}
+{% if a.state == 'approved' and own_party %}
+{% if not step_up_ok %}
+{{ step_up_form('/app/approvals/' ~ a.id, csrf) }}
+{% else %}
+<form method="post" action="/app/approvals/{{ a.id }}/revoke" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <label>Revoke this approval before the agent consumes it — note (optional) <input name="note" maxlength="900"></label>
+  <button type="submit" class="danger">Revoke approval</button>
+</form>
+{% endif %}
+{% endif %}
+{% elif a.state != 'pending' %}
+<p>{{ state(a.state) }}{% if a.decision_note %} — {{ a.decision_note }}{% endif %}</p>
+{% elif not own_party %}
+<p class="flash info">Only a human of party <b>{{ a.approver_party }}</b> can decide this approval.</p>
+{% elif not step_up_ok %}
+{{ step_up_form('/app/approvals/' ~ a.id, csrf) }}
+{% else %}
+<div class="decide">
+<form method="post" action="/app/approvals/{{ a.id }}/decide" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <input type="hidden" name="decision" value="approve">
+  <label>Note (optional) <input name="note" maxlength="1000"></label>
+  <button type="submit" class="good">Approve this exact payload</button>
+</form>
+<form method="post" action="/app/approvals/{{ a.id }}/decide" class="stack card">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <input type="hidden" name="decision" value="reject">
+  <label>Note (optional) <input name="note" maxlength="1000"></label>
+  <button type="submit" class="danger">Reject</button>
+</form>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,19 @@
+# ngrok agent config (v3). No secrets in this file.
+# - authtoken: read by ngrok from the NGROK_AUTHTOKEN environment variable
+#   (documented env override; supplied via /etc/agent-bridge/ngrok.env).
+# - @NGROK_DOMAIN@ is substituted by deploy/ngrok/render-config.sh (ExecStartPre) (the v3 YAML has no
+#   documented ${VAR} interpolation), output goes to /run/agent-bridge-ngrok/ngrok.yml.
+version: 3
+agent:
+  web_addr: false        # no local inspection web UI
+  inspect_db_size: -1    # no request capture (bearer keys must never be stored)
+  console_ui: false
+  update_check: false
+  log: stdout
+  log_format: json
+  log_level: warn
+endpoints:
+  - name: bridge
+    url: https://@NGROK_DOMAIN@
+    upstream:
+      url: http://127.0.0.1:8787

@@ -1,0 +1,57 @@
+{
+  "$id": "https://agent-bridge.invalid/schemas/MeOut",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "agent_id": {
+      "title": "Agent Id",
+      "type": "string"
+    },
+    "key_id": {
+      "title": "Key Id",
+      "type": "string"
+    },
+    "limits": {
+      "additionalProperties": {
+        "type": "integer"
+      },
+      "title": "Limits",
+      "type": "object"
+    },
+    "party_id": {
+      "title": "Party Id",
+      "type": "string"
+    },
+    "paused": {
+      "title": "Paused",
+      "type": "boolean"
+    },
+    "poll_after_s": {
+      "title": "Poll After S",
+      "type": "integer"
+    },
+    "scopes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Scopes",
+      "type": "array"
+    },
+    "server_time": {
+      "title": "Server Time",
+      "type": "string"
+    }
+  },
+  "required": [
+    "agent_id",
+    "party_id",
+    "key_id",
+    "scopes",
+    "paused",
+    "poll_after_s",
+    "limits",
+    "server_time"
+  ],
+  "title": "GET /v1/me response",
+  "type": "object",
+  "x-generated-from": "docs/openapi.json#/components/schemas/MeOut"
+}

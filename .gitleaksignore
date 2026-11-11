@@ -1,0 +1,2 @@
+# gitleaks fingerprints of reviewed false positives (commit:file:rule:line). Keep this empty unless a finding
+# cannot be covered by a narrow allowlist entry in .gitleaks.toml.

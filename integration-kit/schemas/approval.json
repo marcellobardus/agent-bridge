@@ -1,0 +1,146 @@
+{
+  "$id": "https://agent-bridge.invalid/schemas/ApprovalOut",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "properties": {
+    "action": {
+      "additionalProperties": true,
+      "title": "Action",
+      "type": "object"
+    },
+    "action_sha256": {
+      "title": "Action Sha256",
+      "type": "string"
+    },
+    "approver_party": {
+      "title": "Approver Party",
+      "type": "string"
+    },
+    "consumed_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Consumed At"
+    },
+    "created_at": {
+      "title": "Created At",
+      "type": "string"
+    },
+    "dashboard_url": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Dashboard Url"
+    },
+    "decided_at": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Decided At"
+    },
+    "decided_by": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Decided By"
+    },
+    "decision_note": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Decision Note"
+    },
+    "expires_at": {
+      "title": "Expires At",
+      "type": "string"
+    },
+    "id": {
+      "title": "Id",
+      "type": "string"
+    },
+    "kind": {
+      "title": "Kind",
+      "type": "string"
+    },
+    "requested_by": {
+      "title": "Requested By",
+      "type": "string"
+    },
+    "state": {
+      "enum": [
+        "pending",
+        "approved",
+        "rejected",
+        "expired",
+        "cancelled",
+        "consumed"
+      ],
+      "title": "State",
+      "type": "string"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "task_id": {
+      "title": "Task Id",
+      "type": "string"
+    },
+    "valid_until": {
+      "anyOf": [
+        {
+          "type": "string"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Valid Until"
+    }
+  },
+  "required": [
+    "id",
+    "task_id",
+    "kind",
+    "state",
+    "requested_by",
+    "approver_party",
+    "summary",
+    "action",
+    "action_sha256",
+    "decided_by",
+    "decided_at",
+    "decision_note",
+    "created_at",
+    "expires_at",
+    "valid_until",
+    "consumed_at"
+  ],
+  "title": "Approval for a consequential action",
+  "type": "object",
+  "x-generated-from": "docs/openapi.json#/components/schemas/ApprovalOut"
+}

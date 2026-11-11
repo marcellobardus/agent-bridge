@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% from "macros.html" import task_table %}
+{% block title %}Tasks{% endblock %}
+{% block content %}
+<h1>Tasks</h1>
+<form method="get" action="/app/tasks" class="filters">
+  <label>Search <input type="search" name="q" value="{{ f.q or '' }}" placeholder="title, description, messages, task id" maxlength="200"></label>
+  <label>Scope <select name="scope">
+    {% for v, l in [('active','Active'),('history','Historical (closed/rejected)'),('all','All')] %}<option value="{{ v }}"{% if f.scope == v %} selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select></label>
+  <label>State <select name="state"><option value="">any</option>
+    {% for s in states %}<option value="{{ s }}"{% if f.state == s %} selected{% endif %}>{{ s }}</option>{% endfor %}
+  </select></label>
+  <label>Priority <select name="priority"><option value="">any</option>
+    {% for p in priorities %}<option value="{{ p }}"{% if f.priority == p %} selected{% endif %}>{{ p }}</option>{% endfor %}
+  </select></label>
+  <label>Agent <select name="agent"><option value="">any</option>
+    {% for a in agents %}<option value="{{ a }}"{% if f.agent == a %} selected{% endif %}>{{ a }}</option>{% endfor %}
+  </select></label>
+  <label>Category <select name="category"><option value="">any</option>
+    {% for c in categories %}<option value="{{ c }}"{% if f.category == c %} selected{% endif %}>{{ c }}</option>{% endfor %}
+  </select></label>
+  {% if projects %}<label>Project <select name="project"><option value="">any</option>
+    {% for p in projects %}<option value="{{ p }}"{% if f.project == p %} selected{% endif %}>{{ p }}</option>{% endfor %}
+  </select></label>{% endif %}
+  <button type="submit">Filter</button> <a href="/app/tasks">Reset</a>
+</form>
+<p class="muted small">Tip: "state = needs_human" lists escalations; previous human decisions are on <a href="/app/approvals?state=all">Approvals</a> and in each task's timeline.</p>
+{{ task_table(tasks, 'No tasks match.') }}
+<p class="pager">
+{% if page > 1 %}<a href="?{{ f | dictsort | rejectattr(1, 'none') | list | urlencode }}&amp;page={{ page - 1 }}">← Newer</a>{% endif %}
+{% if has_more %}<a href="?{{ f | dictsort | rejectattr(1, 'none') | list | urlencode }}&amp;page={{ page + 1 }}">Older →</a>{% endif %}
+</p>
+{% endblock %}

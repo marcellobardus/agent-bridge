@@ -1,0 +1,58 @@
+#!/bin/sh
+# /usr/local/sbin/bridgectl  (root only, mode 0750 root:root)
+# Runs bridge.cli as the unprivileged `agent-bridge` user inside a transient sandboxed unit, with the
+# service credentials (pepper, totp_kek). Never run the CLI directly as root: it would create root-owned
+# bridge.db-wal/-shm files the service cannot open.
+# Root-side steps (only these): `restore` stops/starts the service, `backup now` starts the backup unit,
+# `doctor` adds the tunnel checks (`bridge.cli doctor --tunnel`, read-only, no DB, no credentials).
+set -eu
+[ "$(id -u)" -eq 0 ] || { echo "bridgectl: must run as root (sudo bridgectl ...)" >&2; exit 1; }
+
+CUR=/opt/agent-bridge/current
+CONF=/etc/agent-bridge/config.toml
+CRED=/etc/agent-bridge/credentials
+SVC=agent-bridge.service
+
+run_cli() {
+  if [ -t 0 ] && [ -t 1 ]; then mode=--pty; else mode=--pipe; fi
+  systemd-run --quiet --wait --collect "$mode" \
+    --uid=agent-bridge --gid=agent-bridge \
+    -p LoadCredential=pepper:$CRED/pepper \
+    -p LoadCredential=totp_kek:$CRED/totp_kek \
+    -p UMask=0077 -p ProtectSystem=strict -p ReadWritePaths=/var/lib/agent-bridge \
+    -p ProtectHome=yes -p PrivateTmp=yes -p NoNewPrivileges=yes \
+    -p IPAddressDeny=any -p MemoryMax=96M -p MemorySwapMax=0 \
+    -p TimeoutStopSec=30 \
+    "$CUR/venv/bin/python" -I -B -m bridge.cli --config "$CONF" "$@"
+}
+
+case "${1:-}" in
+  doctor)
+    # DB checks in the sandbox as agent-bridge; then the tunnel checks (nothing on 127.0.0.1:4040,
+    # public_origin == running ngrok URL) as root outside it, because the sandbox has IPAddressDeny=any and
+    # cannot read the journal. `doctor --tunnel` never opens the DB and loads no credentials.
+    rc=0
+    run_cli doctor || rc=1
+    "$CUR/venv/bin/python" -I -B -m bridge.cli --config "$CONF" doctor --tunnel || rc=1
+    exit $rc ;;
+  backup)
+    if [ "${2:-}" = "now" ]; then
+      systemctl start agent-bridge-backup.service
+      journalctl -u agent-bridge-backup.service -n 5 --no-pager -o cat
+      exit 0
+    fi ;;
+  restore)
+    # `restore --check-only` reads stdin, verifies, and touches nothing: no stop needed.
+    for a in "$@"; do
+      if [ "$a" = "--check-only" ] || [ "$a" = "--purge-replaced" ]; then run_cli "$@"; exit $?; fi
+    done
+    systemctl stop "$SVC"
+    if run_cli "$@"; then
+      systemctl start "$SVC"
+      echo "bridgectl: restore done, service started. Next: bridgectl audit verify" >&2
+      exit 0
+    fi
+    echo "bridgectl: restore FAILED; service left stopped. Inspect, then 'systemctl start agent-bridge'." >&2
+    exit 1 ;;
+esac
+run_cli "$@"

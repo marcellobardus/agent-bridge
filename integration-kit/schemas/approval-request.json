@@ -1,0 +1,51 @@
+{
+  "$id": "https://agent-bridge.invalid/schemas/ApprovalIn",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "action": {
+      "additionalProperties": true,
+      "description": "The exact action payload; approval binds to SHA-256 of its canonical JSON (<= 32 KiB, nesting depth <= 8)",
+      "title": "Action",
+      "type": "object"
+    },
+    "expires_in_s": {
+      "anyOf": [
+        {
+          "maximum": 604800.0,
+          "minimum": 60.0,
+          "type": "integer"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "title": "Expires In S"
+    },
+    "kind": {
+      "enum": [
+        "prod_deploy",
+        "fund_move",
+        "mainnet_upgrade",
+        "live_trading",
+        "credential_change"
+      ],
+      "title": "Kind",
+      "type": "string"
+    },
+    "summary": {
+      "maxLength": 500,
+      "minLength": 1,
+      "title": "Summary",
+      "type": "string"
+    }
+  },
+  "required": [
+    "kind",
+    "summary",
+    "action"
+  ],
+  "title": "POST /v1/tasks/{id}/approvals request body",
+  "type": "object",
+  "x-generated-from": "docs/openapi.json#/components/schemas/ApprovalIn"
+}

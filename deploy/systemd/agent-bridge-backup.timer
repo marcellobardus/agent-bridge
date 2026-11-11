@@ -1,0 +1,10 @@
+[Unit]
+Description=Agent Bridge backup every 6 h
+
+[Timer]
+OnCalendar=*-*-* 00/6:17:00
+Persistent=true
+RandomizedDelaySec=60
+
+[Install]
+WantedBy=timers.target

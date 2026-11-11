@@ -1,0 +1,55 @@
+{% macro state(s) %}<span class="state s-{{ s }}">{{ s | replace('_', ' ') }}</span>{% endmacro %}
+
+{% macro prio(p) %}<span class="prio p-{{ p }}">{{ p }}</span>{% endmacro %}
+
+{% macro untrusted(text, cls='') %}<div class="untrusted {{ cls }}"><span class="aw">agent-written · untrusted</span><pre>{{ text }}</pre></div>{% endmacro %}
+
+{% macro task_table(tasks, empty='No tasks.') %}
+{% if tasks %}
+<div class="scroll"><table class="list">
+<thead><tr><th>Task</th><th>State</th><th>Priority</th><th>Originator → Responsible</th><th>Category</th><th>Updated</th></tr></thead>
+<tbody>
+{% for t in tasks %}
+<tr>
+  <td data-l="Task"><a href="/app/tasks/{{ t.id }}">{{ t.title }}</a><br><small class="muted mono">{{ t.id }}</small>{% if t.paused %} <span class="badge warn">paused</span>{% endif %}</td>
+  <td data-l="State">{{ state(t.state) }}</td>
+  <td data-l="Priority">{{ prio(t.priority) }}</td>
+  <td data-l="Agents"><a href="/app/agents/{{ t.originator_agent_id }}">{{ t.originator_agent_id }}</a> → <a href="/app/agents/{{ t.responsible_agent_id }}"><b>{{ t.responsible_agent_id }}</b></a></td>
+  <td data-l="Category">{{ t.category }}{% if t.project %}<br><small class="muted">{{ t.project }}{% if t.component %} / {{ t.component }}{% endif %}</small>{% endif %}</td>
+  <td data-l="Updated"><time>{{ t.updated_at | ts }}</time></td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}<p class="muted">{{ empty }}</p>{% endif %}
+{% endmacro %}
+
+{% macro approval_table(approvals, names) %}
+{% if approvals %}
+<div class="scroll"><table class="list">
+<thead><tr><th>Approval</th><th>Kind</th><th>State</th><th>Requested by</th><th>Approver</th><th>Created</th><th>Decided</th></tr></thead>
+<tbody>
+{% for a in approvals %}
+<tr>
+  <td data-l="Approval"><a href="/app/approvals/{{ a.id }}">{{ a.summary | truncate(80) }}</a><br><small class="muted">task: <a href="/app/tasks/{{ a.task_id }}">{{ a.task_title | default(a.task_id) | truncate(60) }}</a></small></td>
+  <td data-l="Kind"><span class="badge kind">{{ a.kind }}</span></td>
+  <td data-l="State">{{ state(a.state) }}</td>
+  <td data-l="Requested by">{{ a.requested_by }}</td>
+  <td data-l="Approver">{{ a.approver_party }}</td>
+  <td data-l="Created"><time>{{ a.created_at | ts }}</time></td>
+  <td data-l="Decided">{% if a.decided_by %}{{ names.get(a.decided_by, a.decided_by) }}, <time>{{ a.decided_at | ts }}</time>{% else %}—{% endif %}</td>
+</tr>
+{% endfor %}
+</tbody></table></div>
+{% else %}<p class="muted">No approvals.</p>{% endif %}
+{% endmacro %}
+
+{% macro step_up_form(next, csrf) %}
+<form method="post" action="/app/step-up?next={{ next | urlencode }}" class="card stepup">
+  <input type="hidden" name="csrf_token" value="{{ csrf }}">
+  <p><b>Step-up required.</b> Enter your password and a fresh TOTP code; valid for 5 minutes on this session.
+  Five failures log this session out.</p>
+  <label>Password <input name="password" type="password" autocomplete="current-password" required></label>
+  <label>TOTP code <input name="totp" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" maxlength="6" required></label>
+  <button type="submit">Confirm</button>
+</form>
+{% endmacro %}

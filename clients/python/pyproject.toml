@@ -1,0 +1,17 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "agent-bridge-client"
+version = "1.0.0"
+description = "Stdlib-only client + CLI for the Agent Bridge /v1 API"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+dependencies = []
+
+[project.scripts]
+bridge-agent = "agent_bridge_client.cli:main"
+
+[tool.setuptools]
+packages = ["agent_bridge_client"]
